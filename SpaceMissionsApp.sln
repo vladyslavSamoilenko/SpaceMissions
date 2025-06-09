@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpaceMissions.Core", "SpaceMissions.Core\SpaceMissions.Core.csproj", "{C31B2E2F-C48C-4308-8B76-A0C3E4FAD720}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpaceMissions.Infrastructure", "SpaceMissions.Infrastructure\SpaceMissions.Infrastructure.csproj", "{0D3B7835-5E55-4C9F-9C6E-E782ADFC3128}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpaceMissions.WebAP", "SpaceMissions.WebAP\SpaceMissions.WebAP.csproj", "{D7DBA5AA-D507-443A-A73C-8F3CDE710CF1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C31B2E2F-C48C-4308-8B76-A0C3E4FAD720}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C31B2E2F-C48C-4308-8B76-A0C3E4FAD720}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C31B2E2F-C48C-4308-8B76-A0C3E4FAD720}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C31B2E2F-C48C-4308-8B76-A0C3E4FAD720}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D3B7835-5E55-4C9F-9C6E-E782ADFC3128}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D3B7835-5E55-4C9F-9C6E-E782ADFC3128}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D3B7835-5E55-4C9F-9C6E-E782ADFC3128}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D3B7835-5E55-4C9F-9C6E-E782ADFC3128}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7DBA5AA-D507-443A-A73C-8F3CDE710CF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7DBA5AA-D507-443A-A73C-8F3CDE710CF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7DBA5AA-D507-443A-A73C-8F3CDE710CF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7DBA5AA-D507-443A-A73C-8F3CDE710CF1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
