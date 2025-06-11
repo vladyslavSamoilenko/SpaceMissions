@@ -1,0 +1,6 @@
+@SpaceMissions.WebAP_HostAddress = http://localhost:5004
+
+GET {{SpaceMissions.WebAP_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
