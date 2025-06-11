@@ -8,44 +8,96 @@ public class SpaceMissionsDbContext : DbContext
     public SpaceMissionsDbContext(DbContextOptions<SpaceMissionsDbContext> options)
         : base(options) { }
 
-    public DbSet<Rocket> Rockets { get; set; } = null!;
-    public DbSet<Mission> Missions { get; set; } = null!;
-    public DbSet<User> Users { get; set; } = null!;
-    
+    public DbSet<Rocket> Rockets { get; set; }
+    public DbSet<Mission> Missions { get; set; }
+    public DbSet<User> Users { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Rocket>(e =>
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Rocket>(entity =>
         {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Name).IsRequired().HasMaxLength(100);
-            e.Property(x => x.IsActive).IsRequired();
+            entity.ToTable("Rockets");
+            
+            entity.HasKey(r => r.Id);
+            
+            entity.Property(r => r.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+                
+            entity.Property(r => r.IsActive)
+                .IsRequired();
+                
+            entity.HasIndex(r => r.Name)
+                .IsUnique()
+                .HasDatabaseName("IX_Rockets_Name");
+            entity.HasMany(r => r.Missions)
+                .WithOne(m => m.Rocket)
+                .HasForeignKey(m => m.RocketId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
-        modelBuilder.Entity<Mission>(e =>
+        modelBuilder.Entity<Mission>(entity =>
         {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Company).IsRequired().HasMaxLength(100);
-            e.Property(x => x.Location).IsRequired().HasMaxLength(200);
-            e.Property(x => x.LaunchDateTime).IsRequired();
-            e.Property(x => x.RocketName).IsRequired().HasMaxLength(100);
-            e.Property(x => x.MissionName).IsRequired().HasMaxLength(200);
-            e.Property(x => x.RocketStatus).HasMaxLength(50);
-            e.Property(x => x.MissionStatus).HasMaxLength(50);
-            e.Property(x => x.Price).HasPrecision(18, 2);
-
-            e.HasOne(m => m.Rocket)
-                .WithMany(r => r.Missions)
-                .HasForeignKey(m => m.RocketId)
-                .OnDelete(DeleteBehavior.SetNull); // если ракета удаляется, миссии сохраняются
+            entity.ToTable("Missions");
+            
+            entity.HasKey(m => m.Id);
+            
+            entity.Property(m => m.Company)
+                .IsRequired()
+                .HasMaxLength(100);
+                
+            entity.Property(m => m.Location)
+                .IsRequired()
+                .HasMaxLength(200);
+                
+            entity.Property(m => m.LaunchDateTime)
+                .IsRequired();
+                
+            entity.Property(m => m.MissionName)
+                .IsRequired()
+                .HasMaxLength(200);
+                
+            entity.Property(m => m.MissionStatus)
+                .HasMaxLength(50);
+                
+            entity.Property(m => m.Price)
+                .HasColumnType("decimal(18,2)")
+                .HasDefaultValue(null); 
+            entity.HasIndex(m => m.RocketId);
+            entity.HasIndex(m => m.LaunchDateTime)
+                .HasDatabaseName("IX_Missions_LaunchDate"); 
         });
         
-        modelBuilder.Entity<User>(e =>
+        modelBuilder.Entity<User>(entity =>
         {
-            e.HasKey(u => u.Id);
-            e.Property(u => u.Username).IsRequired().HasMaxLength(100);
-            e.Property(u => u.PasswordHash).IsRequired().HasColumnType("bytea"); 
-            e.Property(u => u.PasswordSalt).IsRequired().HasColumnType("bytea");
-        });
+            entity.ToTable("Users");
+            
+            entity.HasKey(u => u.Id);
+            
+            entity.Property(u => u.Username)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnName("Username");
+            entity.Property(u => u.PasswordHash)
+                .IsRequired()
+                .HasColumnType("bytea"); 
+                
+            entity.Property(u => u.PasswordSalt)
+                .IsRequired()
+                .HasColumnType("bytea");
+                
 
+            entity.HasIndex(u => u.Username)
+                .IsUnique()
+                .HasDatabaseName("IX_Users_Username");
+        });
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<string>()
+            .HaveMaxLength(200);
     }
 }
