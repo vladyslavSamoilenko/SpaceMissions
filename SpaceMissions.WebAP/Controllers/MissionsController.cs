@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SpaceMissions.Core.Entities;
@@ -18,7 +18,7 @@ namespace SpaceMissions.WebAP.Controllers
             _context = context;
         }
 
-        [HttpGet]
+        [HttpGet(Name = nameof(GetMissions))]
         public async Task<IActionResult> GetMissions(
             [FromQuery] MissionFilterDto filter,
             [FromQuery] int pageNumber = 1,
@@ -91,11 +91,30 @@ namespace SpaceMissions.WebAP.Controllers
                 TotalPages  = totalPages,
                 Items       = items
             };
+            
+            var resource = new Resourсe<PaginatedResponseDto<MissionListItemDto>> { Data = result };
+            resource.Links.Add(new LinkInfo {
+                Href   = Url.Link(nameof(GetMissions), new { pageNumber, pageSize }),
+                Rel    = "self",
+                Method = "GET"
+            });
+            if (result.HasNextPage)
+                resource.Links.Add(new LinkInfo {
+                    Href   = Url.Link(nameof(GetMissions), new { pageNumber = pageNumber + 1, pageSize }),
+                    Rel    = "next",
+                    Method = "GET"
+                });
+            if (result.HasPreviousPage)
+                resource.Links.Add(new LinkInfo {
+                    Href   = Url.Link(nameof(GetMissions), new { pageNumber = pageNumber - 1, pageSize }),
+                    Rel    = "prev",
+                    Method = "GET"
+                });
 
-            return Ok(result);
+            return Ok(resource);
         }
         
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = nameof(GetMissionById))]
         public async Task<IActionResult> GetMissionById(int id)
         {
             var mission = await _context.Missions
@@ -118,10 +137,35 @@ namespace SpaceMissions.WebAP.Controllers
                 RocketName = mission.Rocket?.Name ?? string.Empty
             };
 
-            return Ok(dto);
+            var resource = new Resourсe<MissionDto>{ Data = dto };
+            resource.Links.AddRange(new[]
+            {
+                new LinkInfo {
+                    Href   = Url.Link(nameof(GetMissionById), new { id }),
+                    Rel    = "self",
+                    Method = "GET"
+                },
+                new LinkInfo {
+                    Href   = Url.Link(nameof(UpdateMission), new { id }),
+                    Rel    = "update",
+                    Method = "PUT"
+                },
+                new LinkInfo {
+                    Href   = Url.Link(nameof(DeleteMission), new { id }),
+                    Rel    = "delete",
+                    Method = "DELETE"
+                },
+                new LinkInfo {
+                    Href   = Url.Link(nameof(GetRocketByMissionId), new { id }),
+                    Rel    = "rocket",
+                    Method = "GET"
+                }
+            });
+
+            return Ok(resource);
         }
         
-        [HttpPut("{id}")]
+        [HttpPut("{id}", Name = nameof(UpdateMission))]
         [Authorize] 
         public async Task<IActionResult> UpdateMission(int id, [FromBody] MissionDto missionDto)
         {
@@ -163,32 +207,32 @@ namespace SpaceMissions.WebAP.Controllers
                 }
             }
 
+            Response.Headers.Add("Link", $"<${Url.Link(nameof(GetMissionById), new { id })}>; rel=\"self\"");
             return NoContent(); 
         }
 
         // DELETE api/Missions/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRocket(int id)
+        [HttpDelete("{id}", Name = nameof(DeleteMission))]
+        public async Task<IActionResult> DeleteMission(int id)
         {
-            var rocket = await _context.Rockets
-                .Include(r => r.Missions)
-                .FirstOrDefaultAsync(r => r.Id == id);
+            // 1) Ищем миссию по id
+            var mission = await _context.Missions
+                .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (rocket == null) return NotFound();
+            if (mission == null)
+                return NotFound();  // 404, если миссия не найдена
 
-            if (rocket.Missions != null && rocket.Missions.Any())
-            {
-                return BadRequest("Невозможно удалить ракету, у которой есть связанные миссии.");
-            }
-
-            _context.Rockets.Remove(rocket);
+            // 2) Удаляем и сохраняем
+            _context.Missions.Remove(mission);
             await _context.SaveChangesAsync();
 
+            // 3) Возвращаем NoContent + HATEOAS-ссылку на коллекцию миссий
+            Response.Headers.Add("Link", $"<{Url.Link(nameof(GetMissions), null)}>; rel=\"collection\"");
             return NoContent();
         }
 
 
-        [HttpPost]
+        [HttpPost(Name = nameof(CreateMission))]
         [Authorize]
         public async Task<IActionResult> CreateMission([FromBody] MissionDto missionDto)
         {
@@ -227,12 +271,36 @@ namespace SpaceMissions.WebAP.Controllers
                 RocketName = rocket?.Name ?? string.Empty
             };
 
-            return CreatedAtAction(nameof(GetMissionById), new { id = result.Id }, result);
+            var resource = new Resourсe<MissionDto> { Data = result };
+            resource.Links.AddRange(new []
+            {
+                new LinkInfo {
+                    Href = Url.Link(nameof(GetMissionById), new { id = result.Id }),
+                    Rel = "self",
+                    Method = "GET"
+                    },
+                new LinkInfo { 
+                    Href = Url.Link(nameof(UpdateMission), new { id = result.Id }),
+                    Rel = "update",
+                    Method = "PUT"
+                },
+                new LinkInfo {
+                     Href = Url.Link(nameof(DeleteMission), new { id = result.Id }),
+                     Rel = "delete",
+                     Method = "DELETE"
+                },
+                new LinkInfo {
+                    Href = Url.Link(nameof(GetMissions), null),
+                    Rel = "collection",
+                    Method = "GET"
+                }
+            });
+            return CreatedAtAction(nameof(GetMissionById), new { id = result.Id }, resource);
         }
 
         // GET: api/Missions/5/rocket
-        [HttpGet("{id}/rocket")]
-        public async Task<ActionResult<RocketDto>> GetRocketByMissionId(int id)
+        [HttpGet("{id}/rocket", Name = nameof(GetRocketByMissionId))]
+        public async Task<ActionResult<Resourсe<RocketDto>>> GetRocketByMissionId(int id)
         {
             var mission = await _context.Missions
                 .Include(m => m.Rocket)
@@ -247,7 +315,26 @@ namespace SpaceMissions.WebAP.Controllers
                 IsActive = mission.Rocket.IsActive
             };
 
-            return Ok(rocketDto);
+            var resource = new Resourсe<RocketDto> { Data = rocketDto };
+            resource.Links.AddRange(new []
+            {
+                new LinkInfo {
+                    Href = Url.Link(nameof(GetRocketByMissionId), new { id }),
+                    Rel = "self",
+                    Method = "GET"
+                },
+                new LinkInfo {
+                    Href = Url.Link(nameof(GetMissionById), new { id }),
+                    Rel = "mission",
+                    Method = "GET"
+                 },
+                new LinkInfo {
+                    Href = Url.Link(nameof(GetMissions), null),
+                    Rel = "missions",
+                    Method = "GET"
+                }
+            });
+          return Ok(resource);
         }
 
         private bool MissionExists(int id)
