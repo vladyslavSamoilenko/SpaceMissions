@@ -19,7 +19,7 @@ public class RocketsController : ControllerBase
     }
 
     // GET: api/Rockets
-    [HttpGet(Name = nameof(GetRockets))]                     // ← Name добавлен
+    [HttpGet(Name = nameof(GetRockets))]                   
     public async Task<ActionResult<Resourсe<IEnumerable<RocketDto>>>> GetRockets()
     {
         var list = await _context.Rockets
@@ -31,7 +31,7 @@ public class RocketsController : ControllerBase
             })
             .ToListAsync();
 
-        // 1) оборачиваем в Resource и добавляем self
+        // 1) wrap in Resource and add self link
         var resource = new Resourсe<IEnumerable<RocketDto>> { Data = list };
         resource.Links.Add(new LinkInfo {
             Href   = Url.Link(nameof(GetRockets), null),
@@ -43,7 +43,7 @@ public class RocketsController : ControllerBase
     }
 
     // GET: api/Rockets/5
-    [HttpGet("{id}", Name = nameof(GetRocket))]             // ← Name добавлен
+    [HttpGet("{id}", Name = nameof(GetRocket))]             
     public async Task<ActionResult<Resourсe<RocketDto>>> GetRocket(int id)
     {
         var rocket = await _context.Rockets.FindAsync(id);
@@ -56,7 +56,6 @@ public class RocketsController : ControllerBase
             IsActive = rocket.IsActive
         };
 
-        // 2) оборачиваем в Resource + ссылки
         var resource = new Resourсe<RocketDto> { Data = dto };
         resource.Links.AddRange(new[]
         {
@@ -91,7 +90,7 @@ public class RocketsController : ControllerBase
     }
 
     // POST: api/Rockets
-    [HttpPost(Name = nameof(PostRocket))]                    // ← Name добавлен
+    [HttpPost(Name = nameof(PostRocket))]                 
     [Authorize]
     public async Task<IActionResult> PostRocket(RocketDto dto)
     {
@@ -108,7 +107,6 @@ public class RocketsController : ControllerBase
 
         dto.Id = rocket.Id;
 
-        // 3) оборачиваем в Resource + ссылки
         var resource = new Resourсe<RocketDto> { Data = dto };
         resource.Links.AddRange(new[]
         {
@@ -128,12 +126,12 @@ public class RocketsController : ControllerBase
     }
 
     // PUT: api/Rockets/5
-    [HttpPut("{id}", Name = nameof(UpdateRocket))]           // ← Name добавлен
+    [HttpPut("{id}", Name = nameof(UpdateRocket))]          
     [Authorize]
     public async Task<IActionResult> UpdateRocket(int id, RocketDto dto)
     {
         if (id != dto.Id)
-            return BadRequest("ID в URL и теле не совпадают.");
+            return BadRequest("ID in URL and body do not match.");
 
         var existing = await _context.Rockets.FindAsync(id);
         if (existing == null)
@@ -145,15 +143,13 @@ public class RocketsController : ControllerBase
         _context.Entry(existing).State = EntityState.Modified;
         await _context.SaveChangesAsync();
 
-        // 4) в заголовке Link даём возвращаться к самому ресурсу
         Response.Headers.Add("Link",
             $"<{Url.Link(nameof(GetRocket), new { id })}>; rel=\"self\"");
 
         return NoContent();
     }
 
-    // DELETE: api/Rockets/5
-    [HttpDelete("{id}", Name = nameof(DeleteRocket))]       // ← Name добавлен
+    [HttpDelete("{id}", Name = nameof(DeleteRocket))]       // ← Name added
     [Authorize]
     public async Task<IActionResult> DeleteRocket(int id)
     {
@@ -163,7 +159,6 @@ public class RocketsController : ControllerBase
         _context.Rockets.Remove(rocket);
         await _context.SaveChangesAsync();
 
-        // 5) даём ссылку на коллекцию после удаления
         Response.Headers.Add("Link",
             $"<{Url.Link(nameof(GetRockets), null)}>; rel=\"collection\"");
 
@@ -171,7 +166,7 @@ public class RocketsController : ControllerBase
     }
 
     // GET: api/Rockets/5/missions
-    [HttpGet("{id}/missions", Name = nameof(GetMissionsByRocketId))]  // ← Name добавлен
+    [HttpGet("{id}/missions", Name = nameof(GetMissionsByRocketId))] 
     public async Task<ActionResult<Resourсe<IEnumerable<MissionDto>>>> GetMissionsByRocketId(int id)
     {
         var rocket = await _context.Rockets
@@ -195,7 +190,6 @@ public class RocketsController : ControllerBase
             })
             .ToList();
 
-        // 6) оборачиваем в Resource + ссылки
         var resource = new Resourсe<IEnumerable<MissionDto>> { Data = missions };
         resource.Links.AddRange(new[]
         {

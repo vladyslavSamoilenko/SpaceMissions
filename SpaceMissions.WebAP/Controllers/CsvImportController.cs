@@ -27,9 +27,7 @@ namespace SpaceMissions.WebAP.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Импортирует миссии и ракеты из CSV-файла.
-        /// </summary>
+ 
         [HttpPost("import")]
         public async Task<IActionResult> Import()
         {
@@ -40,7 +38,6 @@ namespace SpaceMissions.WebAP.Controllers
                 return NotFound(new { Message = "CSV file not found" });
             }
 
-            // Читаем все записи из CSV
             List<MissionCsvRecord> records;
             using (var reader = new StreamReader(csvPath))
             using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -53,7 +50,6 @@ namespace SpaceMissions.WebAP.Controllers
             }
             _logger.LogInformation("Loaded {Count} CSV records", records.Count);
 
-            // Словарь для ускоренного поиска и хранения новых ракет
             var rocketDict = new Dictionary<string, Rocket>(StringComparer.OrdinalIgnoreCase);
             var missions = new List<Mission>();
 
@@ -65,7 +61,6 @@ namespace SpaceMissions.WebAP.Controllers
                     continue;
                 }
 
-                // Получаем существующую ракету или создаём новую
                 if (!rocketDict.TryGetValue(rec.Rocket, out var rocket))
                 {
                     rocket = await _context.Rockets
@@ -78,14 +73,12 @@ namespace SpaceMissions.WebAP.Controllers
                     rocketDict[rocket.Name] = rocket;
                 }
 
-                // Парсим дату и время запуска в UTC
                 if (!TryParseDateTime(rec.Date, rec.Time, out var launchTimeUtc))
                 {
                     _logger.LogWarning("Invalid date/time for mission '{Mission}'", rec.Mission);
                     continue;
                 }
 
-                // Создаём объект Mission с навигационной ссылкой на Rocket
                 missions.Add(new Mission
                 {
                     Company = rec.Company,
@@ -98,7 +91,6 @@ namespace SpaceMissions.WebAP.Controllers
                 });
             }
 
-            // Сохраняем новые ракеты и миссии в одной транзакции
             var newRockets = rocketDict.Values.Where(r => r.Id == 0).ToList();
             if (newRockets.Any())
                 await _context.Rockets.AddRangeAsync(newRockets);
@@ -120,20 +112,19 @@ namespace SpaceMissions.WebAP.Controllers
             if (string.IsNullOrWhiteSpace(time))
             {
                 if (!DateTime.TryParse(date, CultureInfo.InvariantCulture,
-                                          DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-                                          out parsed))
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                    out parsed))
                     return false;
             }
             else
             {
                 var combined = $"{date}T{time}Z";
                 if (!DateTime.TryParseExact(combined, "yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture,
-                                             DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-                                             out parsed))
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                    out parsed))
                     return false;
             }
 
-            // Принудительно устанавливаем Kind = Utc
             value = DateTime.SpecifyKind(parsed, DateTimeKind.Utc);
             return true;
         }

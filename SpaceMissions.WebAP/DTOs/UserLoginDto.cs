@@ -4,11 +4,11 @@ namespace SpaceMissions.WebAP.DTOs;
 
 public class UserLoginDto
 {
-    [Required(ErrorMessage = "Имя пользователя обязательно")]
-    [StringLength(100, MinimumLength = 3, ErrorMessage = "Длина имени от 3 до 100 символов")]
+    [Required(ErrorMessage = "Username is required")]
+    [StringLength(100, MinimumLength = 3, ErrorMessage = "Username must be between 3 and 100 characters")]
     public string Username { get; set; } = null!;
 
-    [Required(ErrorMessage = "Пароль обязателен")]
-    [StringLength(100, MinimumLength = 6, ErrorMessage = "Длина пароля от 6 до 100 символов")]
+    [Required(ErrorMessage = "Password is required")]
+    [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be between 6 and 100 characters")]
     public string Password { get; set; } = null!;
 }

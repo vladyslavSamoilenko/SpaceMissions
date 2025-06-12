@@ -37,7 +37,7 @@ builder.Services.AddSwaggerGen(opt =>
     {
         Title = "Space Missions API",
         Version = "v1",
-        Description = "API для управления космическими миссиями"
+        Description = "API for managing space missions"
     });
 
     var jwtScheme = new OpenApiSecurityScheme

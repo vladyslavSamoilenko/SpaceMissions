@@ -25,23 +25,23 @@ public class MissionsControllerTests
             {
                 builder.ConfigureServices(services =>
                 {
-                    // Убираем реальную регистрацию DbContext
+                    // Remove existing DbContext registration
                     var descriptor = services.Single(d =>
                         d.ServiceType == typeof(DbContextOptions<SpaceMissionsDbContext>));
                     services.Remove(descriptor);
 
-                    // Регистрируем InMemory базу для тестов
+                    // Register InMemory test database
                     services.AddDbContext<SpaceMissionsDbContext>(opts =>
                         opts.UseInMemoryDatabase("TestDb_Missions"));
 
-                    // Инициализируем чистую базу при каждом запуске
+                    // Ensure fresh database instance
                     var sp = services.BuildServiceProvider();
                     using var scope = sp.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<SpaceMissionsDbContext>();
                     db.Database.EnsureDeleted();
                     db.Database.EnsureCreated();
 
-                    // Заполняем тестовыми данными
+                    // Seed test data
                     var rocket = new Rocket { Id = 1, Name = "Falcon 9", IsActive = true };
                     var mission = new Mission
                     {

@@ -28,7 +28,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register(UserLoginDto dto)
     {
         if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
-            return BadRequest("Пользователь с таким именем уже существует.");
+            return BadRequest("A user with this username already exists.");
 
         CreatePasswordHash(dto.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        return Ok("Пользователь зарегистрирован.");
+        return Ok("User registered successfully.");
     }
 
     [HttpPost("login")]
@@ -50,7 +50,7 @@ public class AuthController : ControllerBase
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == dto.Username);
         if (user == null || !VerifyPasswordHash(dto.Password, user.PasswordHash, user.PasswordSalt))
-            return Unauthorized("Неверный логин или пароль.");
+            return Unauthorized("Invalid username or password.");
 
         var token = GenerateJwtToken(user);
 

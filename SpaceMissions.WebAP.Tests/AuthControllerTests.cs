@@ -25,16 +25,16 @@ public class AuthControllerTests
             {
                 builder.ConfigureServices(services =>
                 {
-                    // Убираем регистрацию реального DbContext
+                    // Remove real DbContext registration
                     var descriptor = services.Single(d =>
                         d.ServiceType == typeof(DbContextOptions<SpaceMissionsDbContext>));
                     services.Remove(descriptor);
 
-                    // Регистрируем InMemory БД
+                    // Register InMemory database for testing
                     services.AddDbContext<SpaceMissionsDbContext>(opts =>
                         opts.UseInMemoryDatabase("TestDb"));
 
-                    // Инициализируем (чистая база каждый запуск)
+                    // Initialize clean database for each run
                     var sp = services.BuildServiceProvider();
                     using var scope = sp.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<SpaceMissionsDbContext>();
@@ -64,7 +64,7 @@ public class AuthControllerTests
 
         Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
         var text = resp.Content.ReadAsStringAsync().Result;
-        StringAssert.Contains("Пользователь зарегистрирован", text);
+        StringAssert.Contains("User registered", text);
     }
 
     [Test, Order(2)]
